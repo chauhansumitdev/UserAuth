@@ -1,4 +1,5 @@
 # UserAuth
 
 User authentication using `mongoose` `jsonwebtoken` `bcrypt` & `express` 
-Dependencies `.env` `body-parser`
+Dependencies `.env` `body-parser` 
+Dev-dependencies `nodemon`
