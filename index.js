@@ -49,10 +49,42 @@ app.post('/registration' , async (req, res) =>{
 // login endpoint
 app.post('/login', async (req,res) =>{
     try{
-
+        const {username, pasword} = req.body;
+        const user = await User.findOne({username});
+        //if the user name is invalid
+        if(!user){
+            return res.status(401).json({ message: 'Invalid username or password' });
+        }
+        //comparing the password
+        const isValidPassword = await bcrypt.compare(password, user.password);
+        if(!isValidPassword){
+            return res.status(401).json({ message: 'Invalid username or password' });
+        }
+        const token = jwt.sign({ userId: user._id }, `${process.env.SECRET_KEY}`, { expiresIn: '1h' });
+        res.json({ token });
+        //loggint the token
+        console.log(token);
+        res.json({ token });
     }catch(error){
         res.status(500).json({error : error.message});
     }
 })
-
-
+// verifying the jwt - (middleware)
+const authenticateToken = (req, res , next)=>{
+    const token = req.header('Authorization');
+    if(!token){
+        return res.status(401).json({ message: 'Unauthorized' });
+    }
+    jwt.verify(token, process.env.SECRET_KEY, (err, user) => {
+        if (err) {
+          return res.status(403).json({ message: 'Forbidden' });
+        }
+        req.user = user;
+        next();
+    });
+};
+// protected route for access only after authentication
+// these routes require the the user to be authenticated first before access
+app.get('/protected' , authenticateToken, (req,res)=>{
+    res.json({ message: 'This is a protected route', user: req.user });
+})
